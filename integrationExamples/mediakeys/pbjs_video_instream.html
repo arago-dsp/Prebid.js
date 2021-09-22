@@ -1,0 +1,140 @@
+<!--
+  This page calls a single bidder for a single ad slot. It can be considered a "hello world" example for using
+  Prebid with the Google Publisher Tag.
+  It also makes a good test page for new adapter PR submissions. Simply set your server's Bid Params object in the
+  bids array inside the adUnits, and it will use your adapter to load an ad.
+  NOTE that many ad servers won't send back an ad if the URL is localhost... so you might need to
+  set an alias in your /etc/hosts file so that you can load this page from a different domain.
+-->
+
+<html>
+
+<head>
+    <!-- Prebid.js -->
+    <script async src="../../build/dev/prebid.js"></script>
+
+    <!-- use recent version of videojs to ensure proper functioning with the iOS devices -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/video.js/6.4.0/video-js.css">
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/video.js/6.4.0/video.js"></script>
+    <!-- videojs-vast-vpaid -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/videojs-vast-vpaid/2.0.2/videojs.vast.vpaid.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/videojs-vast-vpaid/2.0.2/videojs_5.vast.vpaid.min.js"></script>
+
+    <script>
+        var FAILSAFE_TIMEOUT = 3300;
+        var PREBID_TIMEOUT = 1000;
+
+        // Prebid Native Ad Unit
+        var adUnits = [{
+            code: 'video1',
+            mediaTypes: {
+                video: {
+                    context: 'instream',
+                    playerSize: [854,480],
+                    // additional OpenRTB video params
+                    // placement: 2,
+                    // api: [1],
+                    // …
+                    mimes: ['video/mp4'],
+                    protocols: [1, 2, 3, 4, 5, 6, 7, 8],
+                    playbackmethod: [2],
+                    skip: 1
+                }
+            },
+            bids: [{
+                bidder: 'mediakeys',
+                params: {
+                    placementId: 13232385,
+                    video: {
+                        // additional OpenRTB video params. Will be merged with params defined at mediaTypes level
+                    }
+                }
+            }]
+        }];
+
+        var pbjs = pbjs || {};
+        pbjs.que = pbjs.que || [];
+
+        pbjs.que.push(function () {
+            pbjs.setConfig({
+                consentManagement: {
+                    gdpr: {
+                        cmpApi: 'static',
+                        consentData: {
+                            getTCData: {
+                                tcString: 'CPKre1EPKre1EAHABBENBmCsAP_AAH_AAAAAGstD_TrMYyNj-XZ9Nrs0aYxOxMSXo-wCjAaJAWgBAQKAIJQGwmAQpAHgBCACIAAEIiJBAQIlDCHACQAA4IABASAAIAiABBIIICIAgEAQAwAICBBCCcAAAQKYgAAEEAUAmwoAAAoiQAAAIAAABgayACYKkxAA2JYYEk0KRQogBhEABUAoAKIAIEAaAABAAAghAIQQAAAAIAAAAAAAAAiAgEAAgEAAEAAAAHggAABAAAAAAAAAAgAIgAAQAAAAAAAAAIBgAAAAIAAAAQABQCBAAAAAAJAAAAAAAAGAAAAA.f_gAD_gAAAAA',
+                                gdprApplies: true
+                            }
+                        }
+                    }
+                },
+                ortb2: {
+                    device: {geo: {country: "FRA", lat: 43.611, lon: 3.876}}
+                }
+            });
+        });
+
+    </script>
+
+    <script>
+        pbjs.que.push(function () {
+            pbjs.addAdUnits(adUnits);
+            pbjs.requestBids({
+                timeout: 1000,
+                bidsBackHandler: function (bids) {
+                    var highestCpmBids = pbjs.getHighestCpmBids('video1');
+
+                    if (highestCpmBids.length > 0) {
+                        invokeVideoPlayer(highestCpmBids[0].vastUrl);
+                    }
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+<h2>Prebid.js Video Ad Unit Test</h2>
+
+<p>Prebid Instream Video Ad</p>
+
+<div class="example-video-container">
+    <video id="vid1" class="video-js vjs-default-skin vjs-big-play-centered" controls data-setup='{}' width='640' height='480'>
+        <source src="https://vjs.zencdn.net/v/oceans.mp4" type='video/mp4'/>
+        <source src="https://vjs.zencdn.net/v/oceans.webm" type='video/webm'/>
+        <source src="https://vjs.zencdn.net/v/oceans.ogv" type='video/ogg'/>
+    </video>
+</div>
+
+<script>
+    function invokeVideoPlayer(url) {
+        videojs("vid1").ready(function() {
+            function requestVASTXML(callback) {
+                fetch(url).then(resp => resp.text()).then(vastXml => {
+                    callback(null, vastXml);
+                })
+            }
+
+            var player = this;
+            var vastAd = player.vastClient({
+                adTagXML: requestVASTXML,
+                playAdAlways: true,
+                verbosity: 4,
+                autoplay: true,
+                skippable: {
+                    enabled: true,
+                    videoThreshold: 10,
+                    videoOffset:5,
+                },
+                skipButtonText: 'Skip'
+            });
+
+            player.muted(true);
+            player.play();
+        });
+    }
+
+</script>
+
+</body>
+
+</html>

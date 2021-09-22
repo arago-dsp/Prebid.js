@@ -1,0 +1,154 @@
+<!--
+  This page calls a single bidder for a single ad slot. It can be considered a "hello world" example for using
+  Prebid with the Google Publisher Tag.
+  It also makes a good test page for new adapter PR submissions. Simply set your server's Bid Params object in the
+  bids array inside the adUnits, and it will use your adapter to load an ad.
+  NOTE that many ad servers won't send back an ad if the URL is localhost... so you might need to
+  set an alias in your /etc/hosts file so that you can load this page from a different domain.
+-->
+<html>
+
+<head>
+    <!-- Prebid.js -->
+    <script async src="../../build/dev/prebid.js"></script>
+
+    <!-- Google Publisher Tag -->
+    <script async src="https://www.googletagservices.com/tag/js/gpt.js"></script>
+
+    <script>
+        var FAILSAFE_TIMEOUT = 3300;
+        var PREBID_TIMEOUT = 1000;
+
+        // Prebid Native Ad Unit
+        var adUnits = [
+            // {
+            //     code: 'div-gpt-ad-1460505748561-0',
+            //     mediaTypes: {
+            //         banner: {
+            //             sizes: [[300, 600]],
+            //         }
+            //     },
+            //     // Replace this object to test a new Adapter!
+            //     bids: [{
+            //         bidder: 'mediakeys',
+            //         params: {
+            //             // placementId: 13144370
+            //         }
+            //     }]
+            // },
+            {
+                code: 'div-gpt-ad-1630389709115-0',
+                sizes: [360, 360],
+                mediaTypes: {
+                    native: {
+                        rendererUrl: 'https://mediakeys-local.io:9999/integrationExamples/mediakeys/nativeRender.js',
+
+                        // type: 'image', // Special lazy configuration for dumb publishers
+
+                        body: {
+                            required: true
+                        },
+                        title: {
+                            required: true,
+                            len: 800
+                        },
+                        sponsoredBy: {
+                            required: true
+                        },
+                        icon: {
+                            required: true,
+                            // sizes: [40, 40]
+                        },
+                        image: {
+                            required: true,
+                            sizes: [300, 250]
+                        }
+                    }
+                },
+                bids: [{
+                    bidder: 'mediakeys',
+                    params: {
+                        native: {
+                            context: 1, // ORTB Native Context Type IDs. Default `1`.
+                            plcmttype: 1, // ORTB Native Placement Type IDs. Default `1`.
+                        }
+                    }
+                }]
+            }];
+
+        var pbjs = pbjs || {};
+        pbjs.que = pbjs.que || [];
+
+        pbjs.que.push(function() {
+            pbjs.setConfig({
+                consentManagement: {
+                    gdpr: {
+                        cmpApi: 'static',
+                        consentData: {
+                            getTCData: {
+                                tcString: 'CPKre1EPKre1EAHABBENBmCsAP_AAH_AAAAAGstD_TrMYyNj-XZ9Nrs0aYxOxMSXo-wCjAaJAWgBAQKAIJQGwmAQpAHgBCACIAAEIiJBAQIlDCHACQAA4IABASAAIAiABBIIICIAgEAQAwAICBBCCcAAAQKYgAAEEAUAmwoAAAoiQAAAIAAABgayACYKkxAA2JYYEk0KRQogBhEABUAoAKIAIEAaAABAAAghAIQQAAAAIAAAAAAAAAiAgEAAgEAAEAAAAHggAABAAAAAAAAAAgAIgAAQAAAAAAAAAIBgAAAAIAAAAQABQCBAAAAAAJAAAAAAAAGAAAAA.f_gAD_gAAAAA',
+                                gdprApplies: true
+                            }
+                        }
+                    }
+                },
+                ortb2: {
+                    device: {geo: {country: "FRA", lat: 43.611, lon: 3.876}}
+                }
+            });
+        });
+    </script>
+    <script>
+        var googletag = googletag || {};
+        googletag.cmd = googletag.cmd || [];
+
+        googletag.cmd.push(function () {
+            googletag.pubads().disableInitialLoad();
+        });
+
+        pbjs.que.push(function () {
+            pbjs.addAdUnits(adUnits);
+            pbjs.requestBids({
+                bidsBackHandler: sendAdserverRequest,
+                timeout: PREBID_TIMEOUT
+            });
+        });
+
+        function sendAdserverRequest() {
+            if (pbjs.adserverRequestSent) return;
+            pbjs.adserverRequestSent = true;
+            googletag.cmd.push(function () {
+                pbjs.que.push(function () {
+                    pbjs.setTargetingForGPTAsync();
+                    console.log('GPT SHould refresh');
+                    googletag.pubads().refresh();
+                });
+            });
+        }
+
+        setTimeout(function () {
+            sendAdserverRequest();
+        }, FAILSAFE_TIMEOUT);
+    </script>
+    <script>
+		// GPT Setup
+        googletag.cmd.push(function () {
+			googletag
+				.defineSlot('/21686208299/mk-native-01', [300, 250], 'div-gpt-ad-1630389709115-0').addService(googletag.pubads())
+				.addService(googletag.pubads());
+
+            googletag.pubads().enableSingleRequest();
+            googletag.enableServices();
+        });
+    </script>
+</head>
+<body>
+	<h2>Prebid.js Native Ad Unit Test</h2>
+    <div id='div-gpt-ad-1630389709115-0'>
+		<p>No response</p>
+		<script>
+			googletag.cmd.push(function () { googletag.display('div-gpt-ad-1630389709115-0'); });
+    </script>
+</div>
+</body>
+</html>

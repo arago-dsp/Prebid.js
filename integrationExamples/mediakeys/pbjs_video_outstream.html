@@ -1,0 +1,119 @@
+<!--
+  This page calls a single bidder for a single ad slot. It can be considered a "hello world" example for using
+  Prebid with the Google Publisher Tag.
+  It also makes a good test page for new adapter PR submissions. Simply set your server's Bid Params object in the
+  bids array inside the adUnits, and it will use your adapter to load an ad.
+  NOTE that many ad servers won't send back an ad if the URL is localhost... so you might need to
+  set an alias in your /etc/hosts file so that you can load this page from a different domain.
+-->
+
+<html>
+
+<head>
+    <!-- Prebid.js -->
+    <script async src="../../build/dev/prebid.js"></script>
+
+    <script>
+        var FAILSAFE_TIMEOUT = 3300;
+        var PREBID_TIMEOUT = 1000;
+
+        // Prebid Native Ad Unit
+        var adUnits = [{
+            code: 'video1',
+            mediaTypes: {
+                video: {
+                    context: 'outstream',
+                    playerSize: [1280,720],
+                    // additional OpenRTB video params
+                    // placement: 2,
+                    // api: [1],
+                    // …
+                    mimes: ['video/mp4'],
+                    protocols: [1, 2, 3, 4, 5, 6, 7, 8],
+                    playbackmethod: [2],
+                    skip: 1
+                }
+            },
+            renderer: {
+                url: 'https://acdn.adnxs.com/video/outstream/ANOutstreamVideo.js',
+                render: function (bid) {
+                    var adResponse = fetch(bid.vastUrl).then(resp => resp.text()).then(text => ({
+                        ad: {
+                            video: {
+                                content: text,
+                                player_height: bid.playerHeight,
+                                player_width: bid.playerWidth
+                            }
+                        }
+                    }))
+
+                    adResponse.then((content) => {
+                        bid.renderer.push(() => {
+                            ANOutstreamVideo.renderAd({
+                                targetId: bid.adUnitCode,
+                                adResponse: content
+                            });
+                        });
+                    })
+                }
+            },
+            bids: [{
+                bidder: 'mediakeys',
+                params: {
+                    placementId: 13232385,
+                    video: {
+                        // additional OpenRTB video params. Will be merged with params defined at mediaTypes level
+                    }
+                }
+            }]
+        }];
+
+        var pbjs = pbjs || {};
+        pbjs.que = pbjs.que || [];
+
+        pbjs.que.push(function () {
+            pbjs.setConfig({
+                consentManagement: {
+                    gdpr: {
+                        cmpApi: 'static',
+                        consentData: {
+                            getTCData: {
+                                tcString: 'CPKre1EPKre1EAHABBENBmCsAP_AAH_AAAAAGstD_TrMYyNj-XZ9Nrs0aYxOxMSXo-wCjAaJAWgBAQKAIJQGwmAQpAHgBCACIAAEIiJBAQIlDCHACQAA4IABASAAIAiABBIIICIAgEAQAwAICBBCCcAAAQKYgAAEEAUAmwoAAAoiQAAAIAAABgayACYKkxAA2JYYEk0KRQogBhEABUAoAKIAIEAaAABAAAghAIQQAAAAIAAAAAAAAAiAgEAAgEAAEAAAAHggAABAAAAAAAAAAgAIgAAQAAAAAAAAAIBgAAAAIAAAAQABQCBAAAAAAJAAAAAAAAGAAAAA.f_gAD_gAAAAA',
+                                gdprApplies: true
+                            }
+                        }
+                    }
+                },
+                ortb2: {
+                    device: {geo: {country: "FRA", lat: 43.611, lon: 3.876}}
+                }
+            });
+        });
+
+    </script>
+
+    <script>
+        pbjs.que.push(function () {
+            pbjs.addAdUnits(adUnits);
+            pbjs.requestBids({
+                timeout: 1000,
+                bidsBackHandler: function (bids) {
+                    var highestCpmBids = pbjs.getHighestCpmBids('video1');
+                    if (highestCpmBids.length) {
+                        pbjs.renderAd(document, highestCpmBids[0].adId);
+                    }
+                }
+            });
+        });
+    </script>
+</head>
+<body>
+<h2>Prebid.js Video Ad Unit Test</h2>
+
+<div id='video1'>
+    <p>Prebid Outstream Video Ad</p>
+</div>
+
+</body>
+
+</html>
