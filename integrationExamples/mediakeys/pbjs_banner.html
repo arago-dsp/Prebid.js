@@ -19,41 +19,19 @@
         var FAILSAFE_TIMEOUT = 3300;
         var PREBID_TIMEOUT = 1000;
 
-        // Prebid Native Ad Unit
+        // Prebid Banner Ad Unit
         var adUnits = [
             {
-                code: 'div-gpt-ad-1630389709115-0',
-                sizes: [360, 360],
+                code: 'div-gpt-ad-1460505748561-0',
                 mediaTypes: {
-                    native: {
-                        rendererUrl: 'https://mediakeys-local.io:9999/integrationExamples/mediakeys/nativeRender.js',
-                        body: {
-                            required: true
-                        },
-                        title: {
-                            required: true,
-                            len: 800
-                        },
-                        sponsoredBy: {
-                            required: true
-                        },
-                        icon: {
-                            required: true,
-                            // sizes: [40, 40]
-                        },
-                        image: {
-                            required: true,
-                            sizes: [300, 250]
-                        }
+                    banner: {
+                        sizes: [[300, 250]],
                     }
                 },
                 bids: [{
                     bidder: 'mediakeys',
                     params: {
-                        native: {
-                            context: 1, // ORTB Native Context Type IDs. Default `1`.
-                            plcmttype: 1, // ORTB Native Placement Type IDs. Default `1`.
-                        }
+                        // placementId: 13144370
                     }
                 }]
             }];
@@ -61,7 +39,7 @@
         var pbjs = pbjs || {};
         pbjs.que = pbjs.que || [];
 
-        pbjs.que.push(function () {
+        pbjs.que.push(function() {
             pbjs.setConfig({
                 consentManagement: {
                     gdpr: {
@@ -75,7 +53,7 @@
                     }
                 },
                 ortb2: {
-                    device: { geo: { country: "FRA", lat: 43.611, lon: 3.876 } }
+                    device: {geo: {country: "FRA", lat: 48.9, lon: 2.2}}
                 }
             });
         });
@@ -113,24 +91,24 @@
         }, FAILSAFE_TIMEOUT);
     </script>
     <script>
-        // GPT Setup
+		// GPT Setup
         googletag.cmd.push(function () {
-            googletag.defineSlot('/21686208299/mk-native-01', [300, 250], 'div-gpt-ad-1630389709115-0').addService(googletag.pubads());
+			googletag
+				.defineSlot('/19968336/header-bid-tag-0', [300, 250], 'div-gpt-ad-1460505748561-0').addService(googletag.pubads())
+				.addService(googletag.pubads());
 
             googletag.pubads().enableSingleRequest();
             googletag.enableServices();
         });
     </script>
 </head>
-
 <body>
-    <h2>Prebid.js Native Ad Unit Test</h2>
-    <div id='div-gpt-ad-1630389709115-0'>
-        <p>No response</p>
-        <script>
-            googletag.cmd.push(function () { googletag.display('div-gpt-ad-1630389709115-0'); });
+	<h2>Prebid.js Native Ad Unit Test</h2>
+    <div id='div-gpt-ad-1460505748561-0'>
+        <script type='text/javascript'>
+            googletag.cmd.push(function () { googletag.display('div-gpt-ad-1460505748561-0'); });
         </script>
     </div>
+</div>
 </body>
-
 </html>
